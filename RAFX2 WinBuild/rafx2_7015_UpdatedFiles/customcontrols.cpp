@@ -433,13 +433,35 @@ bool CVerticalSliderEx::checkDefaultValue (CButtonState button)
 
 CMouseEventResult CVerticalSliderEx::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
-	CButtonState buttons_cpy(buttons);
-	if (isAAXSlider() && (buttons & kControl))// AAX => kControl => kZoomModifier;
-	{
-		buttons_cpy |= kZoomModifier;
-	}
+    if (!(buttons & kLButton))
+        return kMouseEventNotHandled;
 
-	return CVerticalSlider::onMouseDown(where, buttons_cpy);
+    CRect handleRect;
+    delta = calculateDelta (where, getMode () != kFreeClickMode ? &handleRect : 0);
+    if (getMode () == kTouchMode && !handleRect.pointInside (where))
+        return kMouseEventNotHandled;
+
+    oldVal    = getMin () - 1;
+    oldButton = buttons;
+
+    if ((getMode () == kRelativeTouchMode && handleRect.pointInside (where)) || getMode () != kRelativeTouchMode)
+    {
+        if(checkDefaultValue(buttons))
+        {
+            return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+        }
+    }
+
+    startVal = getValue ();
+    beginEdit ();
+    mouseStartPoint = where;
+
+    int32_t zoomer = isAAXSlider() ? kControl : kZoomModifier;
+
+    if (buttons & zoomer)
+        return kMouseEventHandled;
+
+    return onMouseMoved (where, buttons);
 }
 
 CMouseEventResult CVerticalSliderEx::onMouseUp(CPoint& where, const CButtonState& buttons)
@@ -451,13 +473,65 @@ CMouseEventResult CVerticalSliderEx::onMouseUp(CPoint& where, const CButtonState
 
 CMouseEventResult CVerticalSliderEx::onMouseMoved(CPoint& where, const CButtonState& buttons)
 {
-	CButtonState buttons_cpy(buttons);
-	if (isAAXSlider() && (buttons & kControl))// AAX => kControl => kZoomModifier;
+	CRect rect = getViewSize();
+	CPoint siderSize = getSliderSize();
+	CPoint offsetHandle = getOffsetHandle();
+	double widthOfSlider = siderSize.x;
+	double heightOfSlider = siderSize.y;
+
+	float rangeHandle = 1.0;
+
+	if (getStyle() & kHorizontal)
 	{
-		buttons_cpy |= kZoomModifier;
+		rangeHandle = rect.getWidth() - (widthOfSlider + offsetHandle.x * 2);
+	}
+	else
+	{
+		rangeHandle = rect.getHeight() - (heightOfSlider + offsetHandle.y * 2);
 	}
 
-	return CVerticalSlider::onMouseMoved(where, buttons_cpy);
+	float zoomFactor = getZoomFactor();
+
+	if (isEditing())
+	{
+		if (buttons & kLButton)
+		{
+			if (oldVal == getMin() - 1)
+				oldVal = (value - getMin()) / getRange();
+
+			int32_t zoomer = isAAXSlider() ? kControl : kZoomModifier;
+
+			if ((oldButton != buttons) && (buttons & zoomer))
+			{
+				oldVal = (value - getMin()) / getRange();
+				oldButton = buttons;
+			}
+			else if (!(buttons & zoomer))
+				oldVal = (value - getMin()) / getRange();
+
+			float normValue;
+			if (getStyle() & kHorizontal)
+				normValue = (float)(where.x - delta) / (float)rangeHandle;
+			else
+				normValue = (float)(where.y - delta) / (float)rangeHandle;
+
+			if (getStyle() & kRight || getStyle() & kBottom)
+				normValue = 1.f - normValue;
+
+			if (buttons & zoomer)
+				normValue = oldVal + ((normValue - oldVal) / zoomFactor);
+
+			setValueNormalized(normValue);
+
+			if (isDirty())
+			{
+				valueChanged();
+				invalid();
+			}
+		}
+		return kMouseEventHandled;
+	}
+	return kMouseEventNotHandled;
 }
 
 
@@ -504,13 +578,35 @@ bool CHorizontalSliderEx::checkDefaultValue (CButtonState button)
 
 CMouseEventResult CHorizontalSliderEx::onMouseDown(CPoint& where, const CButtonState& buttons)
 {
-	CButtonState buttons_cpy(buttons);
-	if (isAAXSlider() && (buttons & kControl))// AAX => kControl => kZoomModifier;
-	{
-		buttons_cpy |= kZoomModifier;
-	}
+    if (!(buttons & kLButton))
+        return kMouseEventNotHandled;
 
-	return CHorizontalSlider::onMouseDown(where, buttons_cpy);
+    CRect handleRect;
+    delta = calculateDelta (where, getMode () != kFreeClickMode ? &handleRect : 0);
+    if (getMode () == kTouchMode && !handleRect.pointInside (where))
+        return kMouseEventNotHandled;
+
+    oldVal    = getMin () - 1;
+    oldButton = buttons;
+
+    if ((getMode () == kRelativeTouchMode && handleRect.pointInside (where)) || getMode () != kRelativeTouchMode)
+    {
+        if(checkDefaultValue(buttons))
+        {
+            return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+        }
+    }
+
+    startVal = getValue ();
+    beginEdit ();
+    mouseStartPoint = where;
+
+    int32_t zoomer = isAAXSlider() ? kControl : kZoomModifier;
+
+    if (buttons & zoomer)
+        return kMouseEventHandled;
+
+    return onMouseMoved (where, buttons);
 }
 
 CMouseEventResult CHorizontalSliderEx::onMouseUp(CPoint& where, const CButtonState& buttons)
@@ -522,13 +618,65 @@ CMouseEventResult CHorizontalSliderEx::onMouseUp(CPoint& where, const CButtonSta
 
 CMouseEventResult CHorizontalSliderEx::onMouseMoved(CPoint& where, const CButtonState& buttons)
 {
-	CButtonState buttons_cpy(buttons);
-	if (isAAXSlider() && (buttons & kControl))// AAX => kControl => kZoomModifier;
+	float zoomFactor = getZoomFactor();
+	CRect rect = getViewSize();
+	CPoint siderSize = getSliderSize();
+	CPoint offsetHandle = getOffsetHandle();
+	double widthOfSlider = siderSize.x;
+	double heightOfSlider = siderSize.y;
+
+	float rangeHandle = 1.0;
+
+	if (getStyle() & kHorizontal)
 	{
-		buttons_cpy |= kZoomModifier;
+		rangeHandle = rect.getWidth() - (widthOfSlider + offsetHandle.x * 2);
+	}
+	else
+	{
+		rangeHandle = rect.getHeight() - (heightOfSlider + offsetHandle.y * 2);
 	}
 
-	return CHorizontalSlider::onMouseMoved(where, buttons_cpy);
+
+	if (isEditing())
+	{
+		if (buttons & kLButton)
+		{
+			if (oldVal == getMin() - 1)
+				oldVal = (value - getMin()) / getRange();
+
+			int32_t zoomer = isAAXSlider() ? kControl : kZoomModifier;
+
+			if ((oldButton != buttons) && (buttons & zoomer))
+			{
+				oldVal = (value - getMin()) / getRange();
+				oldButton = buttons;
+			}
+			else if (!(buttons & zoomer))
+				oldVal = (value - getMin()) / getRange();
+
+			float normValue;
+			if (getStyle() & kHorizontal)
+				normValue = (float)(where.x - delta) / (float)rangeHandle;
+			else
+				normValue = (float)(where.y - delta) / (float)rangeHandle;
+
+			if (getStyle() & kRight || getStyle() & kBottom)
+				normValue = 1.f - normValue;
+
+			if (buttons & zoomer)
+				normValue = oldVal + ((normValue - oldVal) / zoomFactor);
+
+			setValueNormalized(normValue);
+
+			if (isDirty())
+			{
+				valueChanged();
+				invalid();
+			}
+		}
+		return kMouseEventHandled;
+	}
+	return kMouseEventNotHandled;
 }
 
 

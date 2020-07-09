@@ -33,8 +33,6 @@
 #include "vstgui/uidescription/uiviewswitchcontainer.h"
 #include "vstgui/vstgui_uidescription.h"
 #include "vstgui/lib/crect.h"
-// 4.9
-#include "vstgui/uidescription/cstream.h"
 
 #if VSTGUI_LIVE_EDITING
 #include "vstgui/uidescription/editing/uieditcontroller.h"

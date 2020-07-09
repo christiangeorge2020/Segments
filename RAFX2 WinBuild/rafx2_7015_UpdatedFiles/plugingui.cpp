@@ -215,6 +215,7 @@ bool PluginGUI::open(UTF8StringPtr _viewName, void* parent, const std::vector<Pl
 
     guiPluginConnector = _guiPluginConnector;
     viewName = _viewName;
+    guiWindowFrame = nullptr;
 
     if(!pluginParameterPtr)
         return false;
@@ -2547,8 +2548,6 @@ CMouseEventResult PluginGUI::onMouseDown(CFrame* frame, const CPoint& where, con
     //     to support the ancient one-mouse paradigm; in ProTools, control + move is for Fine Adjustment
     if (buttons.isRightButton() && buttons & kShift)
     {
-        int t=0;
-        
 #if VSTGUI_LIVE_EDITING
         COptionMenu* controllerMenu = 0;// (delegate && editingEnabled == false) ? delegate->createContextMenu(where, this) : 0;
         if (showGUIEditor == false)
